@@ -1,1 +1,1 @@
-echo "hello aoc"
+echo "hello world"
