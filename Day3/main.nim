@@ -35,8 +35,8 @@ for line in gridOne:
             if section == '.':
                 soFarLine.add(point(isPeriod: true, isAsterisk: false, isSymbol: false, isRootNumber: false, data: section, isNumber: false))
 
-            # elif section == '*':
-            #     soFarLine.add(point(isPeriod: false, isAsterisk: true, isSymbol: false, isRootNumber: false, data: section, isNumber: false))
+            elif section == '*':
+                soFarLine.add(point(isPeriod: false, isAsterisk: true, isSymbol: false, isRootNumber: false, data: section, isNumber: false))
 
             else:
                 soFarLine.add(point(isPeriod: false, isAsterisk: false, isSymbol: true, isRootNumber: false, data: section,  isNumber: false))
@@ -76,27 +76,26 @@ for rowInd, row in typedGrid:
                
                 for neighbor in getSurroundings(rowInd, columnInd):
                     let actualPerson = typedGrid[neighbor[0]][neighbor[1]]
-                    if actualPerson.isSymbol:
+                    if actualPerson.isAsterisk:
                         
-                        if not (actualPerson in pointInQuestion.rootNeighbours):
-                            pointInQuestion.rootNeighbours.add(actualPerson)
+                        if not (pointInQuestion in actualPerson.rootNeighbours):
+                            actualPerson.rootNeighbours.add(pointInQuestion)
 
 
                 for ind, numberConnections in pointInQuestion.pillars:
                     for neighbor in getSurroundings(rowInd, columnInd + ind + 1):
                         let actualPerson = typedGrid[neighbor[0]][neighbor[1]]
-                        if actualPerson.isSymbol:
-
-                            if not (actualPerson in pointInQuestion.rootNeighbours):
-                                pointInQuestion.rootNeighbours.add(actualPerson)
+                        if actualPerson.isAsterisk:
+                            
+                            if not (pointInQuestion in actualPerson.rootNeighbours):
+                                actualPerson.rootNeighbours.add(pointInQuestion)
 
 for rowInd, row in typedGrid:
     for columnInd, column in typedGrid:
         let pointInQuestion = typedGrid[rowInd][columnInd]
 
-        if pointInQuestion.isNumber:
-            if pointInQuestion.isRootNumber:
-                if pointInQuestion.rootNeighbours.len > 0:
-                    sum += pointInQuestion.read
+        if pointInQuestion.isAsterisk:
+            if pointInQuestion.rootNeighbours.len == 2:
+                sum += pointInQuestion.rootNeighbours[0].read * pointInQuestion.rootNeighbours[1].read
 
 echo sum

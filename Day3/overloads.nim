@@ -3,6 +3,7 @@ import math
 type
     point* = ref object
         isPeriod*: bool
+        isAsterisk*: bool
         isSymbol*: bool
         isNumber*: bool
         isRootNumber*: bool
