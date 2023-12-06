@@ -4,20 +4,8 @@ import math
 
 let lines = getFileLines("data.txt")
 
-var timesOld = lines[0].split(":")[1].split()
-var distancesOld = lines[1].split(":")[1].split()
-
-var times: seq[int]
-var distances: seq[int]
-
-for t in timesOld:
-    if t.len > 0:
-        times.add(parseInt(t))
-
-for t in distancesOld:
-    if t.len > 0:
-        distances.add(parseInt(t))
-
+let time = parseInt(lines[0].split(":")[1].replace(" ", ""))
+let distance = parseInt(lines[1].split(":")[1].replace(" ", ""))
 
 proc solveQuadratic(a, b, c: int): HSlice[float64, float64] =
     let disc = b * b - 4 * a * c
@@ -34,11 +22,11 @@ proc solveQuadratic(a, b, c: int): HSlice[float64, float64] =
 
 var sum = 1
 
-for ind, time in times:
-    let result = solveQuadratic(-1,time, -1 * distances[ind])
 
-    let newSlice = ceil(result.a + 0.0001)..ceil(result.b - 0.001)
+let result = solveQuadratic(-1,time, -1 * distance)
 
-    sum *= int(newSlice.b - newSlice.a) 
+let newSlice = ceil(result.a + 0.0001)..ceil(result.b - 0.001)
+
+sum *= int(newSlice.b - newSlice.a) 
 
 echo sum
