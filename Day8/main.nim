@@ -1,6 +1,7 @@
 import zLib
 import tables
 import strutils
+import math
 import sequtils
 
 var lines = getFileLines("data.txt")
@@ -42,22 +43,33 @@ for x in lines:
     let parsed = extractLine(x)
     mainTable[parsed[0]] = parsed[1]
 
-var currentLine = mainTable["AAA"]
-var its = 0
+var currentPaths: seq[string]
 
-while currentLine[2] != "ZZZ":
-    echo currentLine
+proc getTag(s: string): char =
+    return s[^1]
+for k in mainTable.keys:
+    let lastChar = k[^1]
+    if lastChar == 'A':
+        currentPaths.add(k)
 
-    let moddedNewResult = its.nMod(instruction.high)
-    # echo moddedNewResult, its
-    let result = inspectInstruction(instruction[moddedNewResult])
+var pathDurations: seq[int]
 
-    its += 1
-    let nextLine = currentLine[result]
-    currentLine = mainTable[nextLine]
+for path in currentPaths:
+    var holderPath = path
+    var newIts = 0
+    while holderPath.getTag != 'Z':
+        let moddedNewResult = newIts.nMod(instruction.high)
+        let result = inspectInstruction(instruction[moddedNewResult])
 
-    if its == 1000000:
-        break
-    
-    
-echo its
+        holderPath = mainTable[holderPath][result]
+
+        newIts += 1
+
+    pathDurations.add(newIts)
+
+var t = 1
+
+for x in pathDurations:
+    t = lcm(t, x)
+
+echo t
