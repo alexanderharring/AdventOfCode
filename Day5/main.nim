@@ -1,29 +1,20 @@
 import zLib
 import strutils
-import math
 import algorithm
 
 let lines = getFileLines("data.txt")
 
 let seeds = lines[0].split(": ")[1].split()
 
-var slices: seq[HSlice[int, int]]
-
-var last = ""
-
-for i in 0..seeds.high:
-    if i mod 2 == 0:
-        last = seeds[i]
-    else:
-        slices.add(parseInt(last)..(parseInt(last) + parseInt(seeds[i]) - 1))
-
 var indexMap: seq[int]
-var layersMap: seq[seq[(int, int, int)]]
+var layersMap: seq[seq[(int, HSlice[int, int])]]
+
+var rangeLayers: array[8, seq[HSlice[int, int]]]
 
 proc explore(ind: int): seq[seq[string]] =
     var copyInd = ind
     var line = lines[copyInd]
-    
+
     while not (line.isEmptyOrWhitespace):
         result.add(line.split())
 
@@ -32,10 +23,11 @@ proc explore(ind: int): seq[seq[string]] =
         if copyInd > lines.high:
             break
         line = lines[copyInd]
-    
+
 proc intified(s: seq[string]): seq[int] =
     for z in s:
         result.add(parseInt(z))
+
 
 for ind, line in lines:
 
@@ -51,7 +43,7 @@ for ind, line in lines:
 
     of "water-to-light":
         indexMap.add(ind)
-    
+
     of "light-to-temperature":
         indexMap.add(ind)
 
@@ -61,82 +53,60 @@ for ind, line in lines:
     of "humidity-to-location":
         indexMap.add(ind)
 
+proc lSort(a, b: (int, HSlice[int, int])): int =
+    if a[1].a > b[1].a:
+        return 1
+    else:
+        return -1
+
+var s: seq[int]
+
 for ind, layer in indexMap:
     let gotLayers = explore(layer + 1)
-    var q: seq[(int, int,int)]
+    var q: seq[(int, HSlice[int, int])]
 
     for l in gotLayers:
-        q.add((parseInt(l[0]), parseInt(l[1]), parseInt(l[2])))
+        q.add((parseInt(l[0]), parseInt(l[1]) .. parseInt(l[1]) + parseInt(l[2]) - 1))
+
+
+    q.sort(lSort)
 
     layersMap.add(q)
 
 
-proc processSeed(seed: int): int =
-    result = seed
+proc doesIntersect(x: HSlice[int, int], y: HSlice[int, int]): bool =
+    if x.a < y.a:
+        if y.a < x.b:
+            return true
 
-    for layer in layersMap:
-        for subLayer in layer:
-            if result in (subLayer[1] ..< subLayer[1] + subLayer[2]):
-                result = subLayer[0] + result - subLayer[1]
-                break
-
-    return result
-
-var lastLayer = layersMap[^1]
-
-proc quickZsort(a: (int,int,int), b: (int,int,int)): int =
-    if a[0] > b[0]:
-        return 1
     else:
-        return -1
+        if x.a < y.b:
+            return true
+    
+    return false
 
-proc altSort(a: (int,int,int), b: (int,int,int)): int =
-    if a[1] > b[1]:
-        return 1
+proc chop(x, y: HSlice[int, int]): HSlice[int, int] =
+    return clamp(y.a, x.a, x.b)..clamp(y.b, x.a, x.b)
+
+let r1 = 3..8
+let r2 = 3..8
+
+echo r1.chop(r2)
+
+
+var back = 0
+
+for i, seed in seeds:
+    if i mod 2 == 0:
+        back = parseInt(seed)
     else:
-        return -1
+        rangeLayers[0].add(back .. back + parseInt(seed) - 1)
 
-lastLayer.sort(quickZsort)
+# for z in layersMap:
+#     echo z
 
-let minLocation = lastLayer[0][0]
-let maxLocation = lastLayer[^1][0] + lastLayer[^1][2]
+# for layerInd in 0..7:
+#     for seedRange in rangeLayers[layerInd]:
+#         for thisLayer in layersMap[layerInd]:
+#             if seedRange.doesIntersect(thisLayer[1]):
 
-
-proc jumpUpLevel(levelIamCurrentlyAt: int, sisyphus: int): int =
-    var nextLayers = layersMap[levelIamCurrentlyAt - 1]
-
-    nextLayers.sort(quickZsort)
-
-    var correctLayer = nextLayers[0]
-
-    var boundarySort = layersMap[levelIamCurrentlyAt - 1]
-    boundarySort.sort(altSort)
-
-    let localMin = boundarySort[0][1]
-    let localMax = boundarySort[^1][1] + boundarySort[^1][2]
-
-    if not (sisyphus in localMin..localMax):
-        return sisyphus
-
-    for L in nextLayers:
-        if sisyphus < L[0]:
-            break
-        correctLayer = L
-
-    let r = sisyphus - correctLayer[0]
-    return r + correctLayer[1]
-
-
-for qsisyphus in minLocation..maxLocation:
-
-    echo "start: " & $qsisyphus
-    var sisyphus = qsisyphus
-
-    var endIndex = 6
-
-    while endIndex > 1:
-        endIndex -= 1
-        sisyphus = jumpUpLevel(endIndex, sisyphus)
-
-    echo "end: " & $sisyphus
-    echo ""
